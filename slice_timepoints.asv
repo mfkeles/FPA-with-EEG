@@ -42,6 +42,18 @@ sT.Scores = combined_TimeScores(:,2);
 sT.Epochs = combined_TimeScores(:,3);
 
 
+%left over code that removes sections without scoring
+%ind =find(combined_TimeScores(:,2)>0);
+% newTable = EEG_ZT0_3(ind(1):ind(end),:);
+% newTable.Scores = combined_TimeScores(ind(1):ind(end),2);
+% newTable.Epochs = combined_TimeScores(ind(1):ind(end),3);
+
+%modify the GCaMP signal to match
+% clear cut_normDat
+% fiberstart = floor((ind(1)*length(normDat))/length(eeg_sTimeStamp));
+% fiberend   = floor((ind(end)*length(normDat))/length(eeg_sTimeStamp));
+% cut_normDat = normDat(fiberstart:fiberend);
+
 %Epoch indices
 e_ind = find(diff(sT.Epochs)==1);
 fiber_ind = floor((find(diff(sT.Epochs)==1)*length(sG.Time_s_))/length(sT.Epochs));
@@ -56,8 +68,9 @@ end
 
 sG.Epochs = tmp_arr(:,1);
 sG.Scores = tmp_arr(:,2);
-%remove sections without Epochs
-sG(sG.Epochs ==0 ,:) =[];
-sT(sT.Epochs == 0,:) = [];
+
+
+
+
 
 end

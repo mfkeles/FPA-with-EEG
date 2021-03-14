@@ -3,7 +3,7 @@ function [sfG] = calc_dff(sG,normalizationOption)
 
 ref_raw = sG.AnalogIn__Ch_1AIn_1_Dem_AOut_1__LowPass;
 g_raw = sG.AnalogIn__Ch_1AIn_1_Dem_AOut_2__LowPass;
-fs = 1/median(diff(sG.Time_s_)); %calculates the sampling frequency
+fs = round(1/(mean(diff(sG.Time_s_)))); %calculates the sampling frequency
 
 bleachingFilter = designfilt('lowpassiir', 'HalfPowerFrequency', 0.1, 'SampleRate', fs, 'DesignMethod', 'butter', 'FilterOrder', 12);
 rLowpass = filtfilt(bleachingFilter, ref_raw);
@@ -42,10 +42,9 @@ elseif normalizationOption==4
     f1 = @std;
 end
 
-f0 = normalize(f0,fSmooth,sG.Time_s_);
-f1 = normalize(f1,fSmooth,sG.Time_s_);
-sG.dff = (fSmooth -f0)./f1;
-sfG = sG;
+f0 = normalize(0,fSmooth,sG.Time_s_);
+f1 = normalize(1,fSmooth,sG.Time_s_);
+dff = (fSmooth -f0)./f1;
     function output = normalize(parameters, f, time)
         if iscell(parameters)
             fcn = parameters{1};
