@@ -24,6 +24,6 @@ sT(1:round(400*n/100),:) = [];
 
 %save the processed files
 writetable(rsfG, fullfile(path,['GCaMP_dff' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '-at-' num2str(frequency) 'Hz-' 'processed.csv']));
-writetable(sT, fullfile(path,['EEG-EMG-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '-at-' num2str(frequency) 'Hz-' 'processed.csv']));
+writetable(sT, fullfile(path,['EEG-EMG-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '-at-400'  'Hz-' 'processed.csv']));
 
 end

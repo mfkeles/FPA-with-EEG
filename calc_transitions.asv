@@ -89,5 +89,5 @@ frequency = fs/ds;
 %save the processed files
 writetable(drsfG, fullfile(path,['GCaMP_dsrfG' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '-downsampled-to-' num2str(frequency) 'Hz-' 'processed.csv']));
 writetable(meanDFF, fullfile(path,['meanDFF-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
-save(fullfile(path,['Transition-statistics-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.mat']),'transition','t_name','t_idx','no_transition')
+save(
 end
