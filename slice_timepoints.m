@@ -1,4 +1,4 @@
-function [sT,sG]= slice_timepoints(time_points,T,G,S)
+function [sT,rsG]= slice_timepoints(time_points,T,G,S,frequency)
 
 start_ind = find(T.Time==time_points{1},1);
 stop_ind  = find(T.Time==time_points{2},1);
@@ -44,9 +44,17 @@ sT.Epochs = combined_TimeScores(:,3);
 
 %Epoch indices
 e_ind = find(diff(sT.Epochs)==1);
-fiber_ind = floor((find(diff(sT.Epochs)==1)*length(sG.Time_s_))/length(sT.Epochs));
-tmp_arr = [zeros(size(sG.Time_s_,1),1) zeros(size(sG.Time_s_,1),1)]; %use repmat
+%resample to traget frequency
+fs = 1/median(diff(sG.Time_s_)); %sampling frequency
+[p ,q] = rat(frequency/fs);
+rsG.reference = resample(sG.AnalogIn__Ch_1AIn_1_Dem_AOut_1__LowPass,sG.Time_s_,frequency,p,q);
+rsG.signal = resample(sG.AnalogIn__Ch_1AIn_1_Dem_AOut_2__LowPass,sG.Time_s_,frequency,p,q);
+rsG.time = resample(sG.AnalogIn__Ch_1AIn_1_Dem_AOut_2__LowPass,sG.Time_s_,frequency,p,q);
+rsG.time = resample(sG.Time_s_,sG.Time_s_,frequency,p,q);
 
+%slice the fiber photometry data based on the found indices
+fiber_ind = floor((find(diff(sT.Epochs)==1)*length(rsG.time))/length(sT.Epochs));
+tmp_arr = [zeros(size(rsG.time,1),1) zeros(size(rsG.time,1),1)]; 
 fiber_ind = [0 ; fiber_ind];
 e_ind = [0;e_ind];
 for i=1:length(fiber_ind)-1
@@ -54,10 +62,10 @@ for i=1:length(fiber_ind)-1
     tmp_arr(fiber_ind(i)+1:fiber_ind(i+1),2) = sT.Scores(e_ind(i)+1);
 end
 
-sG.Epochs = tmp_arr(:,1);
-sG.Scores = tmp_arr(:,2);
+rsG.Epochs = tmp_arr(:,1);
+rsG.Scores = tmp_arr(:,2);
 %remove sections without Epochs
-sG(sG.Epochs ==0 ,:) =[];
+rsG(rsG.Epochs ==0 ,:) =[];
 sT(sT.Epochs == 0,:) = [];
 
 end
