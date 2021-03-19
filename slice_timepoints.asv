@@ -48,8 +48,8 @@ e_ind = find(diff(sT.Epochs)==1);
 fs = 1/median(diff(sG.Time_s_)); %sampling frequency
 [p ,q] = rat(frequency/fs);
 rsG.reference = resample(sG.AnalogIn__Ch_1AIn_1_Dem_AOut_1__LowPass,sG.Time_s_,frequency,p,q);
-[rsG.signal, rsG.time] = resample(sG.AnalogIn__Ch_1AIn_1_Dem_AOut_2__LowPass,sG.Time_s_,frequency,p,q);
-
+rsG.signal = resample(sG.AnalogIn__Ch_1AIn_1_Dem_AOut_2__LowPass,sG.Time_s_,frequency,p,q);
+rsG.time = resample(sG.Time_s_, sG.Time_s_, frequency, p, q);
 
 %slice the fiber photometry data based on the found indices
 fiber_ind = floor((find(diff(sT.Epochs)==1)*length(rsG.time))/length(sT.Epochs));

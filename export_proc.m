@@ -1,4 +1,4 @@
-function [rsfG] = export_proc(rsfG,sT,path,frequency,input_points)
+function [rsfG,conv_zt] = export_proc(rsfG,sT,path,frequency,input_points)
 
 
 

@@ -1,4 +1,4 @@
-function [M, downsampled, dscore,dtime]= calc_transitions(rsfG,ds,window)
+function [M, downsampled, dscore,dtime,depochs]= calc_transitions(rsfG,ds,window,conv_zt,path)
 
 %first define a container that has the keys for 1,2,3 and 4 scoring:
 %NonRem                 	    2
@@ -19,10 +19,14 @@ window = fs/ds*window;
 k = keys(M);
 for i=1:numel(k)
     meanDFF(k{i}) = mean(rsfG.dff(rsfG.Scores == k{i}));
+    area(k{i}) = trapz(rsfG.dff(rsfG.Scores == k{i}))/fs;
     headers{k{i}} = M(k{i});
+    
 end
 meanDFF = array2table(meanDFF);
 meanDFF.Properties.VariableNames = headers;
+area = array2table(area);
+area.Properties.VariableNames = headers;
 
 
 %downsample the traces by a factor of ds
@@ -60,23 +64,27 @@ no_transition = setdiff(all_combs,t_name);
 exportgraphics(gcf,fullfile(path,['Transition_Histogram' '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.png']),'Resolution',300,'ContentType','image');
 
 skipping = [];
+n=1;
 %slice all transitions 
 for i=1:numel(t_idx)
     if t_idx(i)-window < 0 || t_idx(i)+window > length(downsampled)
-        skipping(end+1) = t_idx(i);
+        skipping(end+1) = i;
         continue
     else
-        t_traces(i,:) = downsampled(t_idx(i)-window+1:(t_idx(i,:)+window));
+        m_traces(n,:) = downsampled(t_idx(i)-window+1:(t_idx(i,:)+window));
+        m_tidx(n) = t_idx(i);
+        m_trans(n) = transition(i);
+        m_name(n) = t_name{i};
+        n=n+1;
     end
 end
 
 
 %remove transitions that are not included due to window size
 if ~isempty(skipping)
-rem_list = t_idx==skipping;
-t_idx(rem_list) = [];
-transition(rem_list) = [];
-t_name(rem_list) = [];
+t_idx(skipping) = [];
+transition(skipping) = [];
+t_name(skipping) = [];
 end
 
 drsfG.dff = downsampled;
@@ -89,5 +97,6 @@ frequency = fs/ds;
 %save the processed files
 writetable(drsfG, fullfile(path,['GCaMP_dsrfG' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '-downsampled-to-' num2str(frequency) 'Hz-' 'processed.csv']));
 writetable(meanDFF, fullfile(path,['meanDFF-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
-save(
+save(fullfile(path,['Transition-statistics-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.mat']),'transition','t_name','t_idx','no_transition')
+writetable(area, fullfile(path,['area-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
 end

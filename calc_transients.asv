@@ -1,4 +1,4 @@
-function [uniquePeakIds,allPeak] = calc_transients(M,downsampled,dscore,dtime)
+function [allPeakIds] = calc_transients(M,downsampled,dscore,dtime,conv_zt,path)
 
 parameters = {2.00, @std, @mean};
 
@@ -22,9 +22,12 @@ for i=1:numel(karr)
     transients(karr{i}) = length(find(dscore(allPeakIds)==karr{i}));
     secs(karr{i}) = round(length(dscore(dscore==karr{i}))/fd);
     freqs(karr{i}) = transients(karr{i})/secs(karr{i});
-    headers(karr{i} = 
+    headers{karr{i}} = M(karr{i});
 end
 
+allTransients = array2table([transients;secs;freqs]);
+allTransients.Properties.VariableNames = headers;
+allTransients.Row = {'Transient Number','Total Secs','Frequency'};
 
 
 karr = M.keys;
@@ -32,10 +35,16 @@ for i=1:numel(karr)
     utransients(karr{i}) = length(find(dscore(uniquePeakIds)==karr{i}));
     usecs(karr{i}) = round(length(dscore(dscore==karr{i}))/fd);
     ufreqs(karr{i}) = utransients(karr{i})/usecs(karr{i});
+    headers{karr{i}} = M(karr{i});
 end
+upTransients = array2table([utransients;usecs;ufreqs]);
+upTransients.Properties.VariableNames = headers;
+upTransients.Row = {'Transient Number','Total Secs','Frequency'};
+
+writetable(allTransients, fullfile(path,['all-transients-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
+writetable(upTransients, fullfile(path,['up-transients-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
 
 
-    
 
     function value = threshold(parameters, data)
         % {value1, @mad, @median}

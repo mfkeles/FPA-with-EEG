@@ -1,4 +1,4 @@
-function [uniquePeakIds,allPeak] = calc_transients(M,downsampled,dscore,dtime)
+function [allPeakIds, uniquePeakIds] = calc_transients(M,downsampled,dscore,dtime,conv_zt,path)
 
 parameters = {2.00, @std, @mean};
 
@@ -6,8 +6,9 @@ parameters = {2.00, @std, @mean};
 
 fd = round(1/median(diff(dtime)));
 
-peaksFilter = designfilt('lowpassiir','HalfPowerFrequency',0.2,'SampleRate',fd,'DesignMethod','butter','FilterOrder',12);
-peaksSmooth = filtfilt(peaksFilter,downsampled);
+%peaksFilter = designfilt('lowpassiir','HalfPowerFrequency',0.2,'SampleRate',fd,'DesignMethod','butter','FilterOrder',12);
+[b a] = butter(2,0.05);
+peaksSmooth = filtfilt(b,a,downsampled);
 
 peakThreshold = threshold(parameters,peaksSmooth);
 
@@ -40,6 +41,9 @@ end
 upTransients = array2table([utransients;usecs;ufreqs]);
 upTransients.Properties.VariableNames = headers;
 upTransients.Row = {'Transient Number','Total Secs','Frequency'};
+
+writetable(allTransients, fullfile(path,['all-transients-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
+writetable(upTransients, fullfile(path,['up-transients-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
 
 
 
