@@ -44,6 +44,13 @@ for i=1:size(v,1)
     all_combs{i} = [M(v(i,1)) ' to ' M(v(i,2))];
 end
 
+
+%find if there is unscored epochs and make them quietwake by defualt, this
+%doesn't affect the meanDFF and other stuff
+if find(dscore==255)
+    dscore(dscore==255) = 1;
+end
+
 %calculate all the transitions
 t_idx = find(diff(dscore)~=0); %find all the transitions
 for i=1:numel(t_idx)
@@ -74,8 +81,9 @@ for i=1:numel(t_idx)
         continue
     else
         m_traces(n,:) = downsampled(t_idx(i)-window+1:(t_idx(i,:)+window));
+        m_scores(n,:) = dscore(t_idx(i)-window+1:(t_idx(i,:)+window));
         m_tidx(n) = t_idx(i);
-        m_trans(n) = transition(i);
+        m_trans(n,:) = transition(i,:);
         m_name{n} = t_name{i};
         n=n+1;
     end
@@ -91,6 +99,6 @@ frequency = fs/ds;
 %save the processed files
 writetable(drsfG, fullfile(path,['GCaMP_dsrfG' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '-downsampled-to-' num2str(frequency) 'Hz-' 'processed.csv']));
 writetable(meanDFF, fullfile(path,['meanDFF-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
-save(fullfile(path,['Transition-statistics-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.mat']),'m_traces','m_tidx','m_trans','m_name','no_transition')
+save(fullfile(path,['Transition-statistics-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.mat']),'m_traces','m_tidx','m_trans','m_name','no_transition','m_scores')
 writetable(area, fullfile(path,['area-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
 end
