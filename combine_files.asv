@@ -135,7 +135,7 @@ for i=1:numel(mouse)
             else
                 ind_binned_mean.mouse = repmat(i,3,1);
                 ind_binned_mean.session= repmat(j,3,1);
-                ind_binned_mean.ZT = repmat({['ZT' B1{1} '-to-' B1{2}]},3,1);
+                ind_binned_mean.ZT = repmat({['ZT' B1{1} '-to-' B1{2}]},3,1);        
                 tot_bin_mean = [tot_bin_mean ; ind_binned_mean];
             end
         end
@@ -332,129 +332,131 @@ else
 end
 fd =25;
 window = 50;
-%plot all the transitions 
+%plot all the transitions in two ways 
+for i=1:numel(desired_groups)
+       sub_t = etransition_table(ismember(etransition_table.names,desired_groups{i}),:);
+     %split into ZTs
+     [group, id] = findgroups(sub_t.ZT);
+     %go through each ZT
+     for j=1:numel(gids)
+         sub_t1 = sub_t(group==gids(j),:);
+         t_arr = cell2mat(sub_t1.traces);
+         if size(t_arr,1)<200 %if less than 200, do not do PCA
+             t_arr = smoothdata(t_arr,2,'gaussian',75);
+             clf
+             subplot(4,1,1:3)
+             [coeff,score,latent,tsquared,explained] = pca(t_arr);
+             [jnk srtinx] = sort(score(:,1),'descend');
+             imagesc(t_arr(srtinx,:))
+             tot_sec = size(t_arr,2)/fd;
+              xticks([0:fd*10:size(t_arr,2)])
+             labelarr = cellfun(@num2str,(num2cell((tot_sec/2)*-1:10:tot_sec/2)),'un',0);
+             xticklabels(labelarr)
+             ylabel('Transitions')
+             xlabel('Time (sec)')
+             title(strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT)),'interpreter','none')
+             caxis([-0.5 6])
+             subplot(414)
+             shadedErrorBar(1:size(t_arr,2),mean(t_arr),std(t_arr,0,1)/sqrt(size(t_arr,1)))
+             %make 10 second windows
+             xticks([0:fd*10:size(t_arr,2)])
+             xticklabels(labelarr)
+             xlabel('Time (sec)')
+             exportgraphics(gcf,{fullfile(npath,strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT)), '.pdf')},'Resolution',300,'ContentType','vector');
+         else
+            % for mm=1:2
+             t_arr = smoothdata(t_arr,2,'gaussian',75);
+             clf
+             subplot(4,1,1:3)
+             [coeff,score,latent,tsquared,explained] = pca(t_arr);
+             [jnk srtinx] = sort(score(:,1),'descend');
+             imagesc(t_arr(srtinx,:))
+             tot_sec = size(t_arr,2)/fd;
+              xticks([0:fd*10:size(t_arr,2)])
+             labelarr = cellfun(@num2str,(num2cell((tot_sec/2)*-1:10:tot_sec/2)),'un',0);
+             xticklabels(labelarr)
+             ylabel('Transitions')
+             xlabel('Time (sec)')
+             title(strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT)),'interpreter','none')
+             caxis([-0.5 6])
+             subplot(414)
+             shadedErrorBar(1:size(t_arr,2),mean(t_arr),std(t_arr,0,1)/sqrt(size(t_arr,1)))
+             %make 10 second windows
+             xticks([0:fd*10:size(t_arr,2)])
+             xticklabels(labelarr)
+             xlabel('Time (sec)')
+             fullfile(npath,strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT)), '.pdf')
+              exportgraphics(gcf,fullfile(npath,strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT)), '.pdf'){1},'Resolution',300,'ContentType','vector');
+            % end
+         end
+     end
+end
+
+         
+
+
+
+
+
+
+
+
+
+
+
+
+end
+
+
+
+%testing the code
 for i=1:numel(desired_groups)
     sub_t = etransition_table(ismember(etransition_table.names,desired_groups{i}),:);
     %split into ZTs
     [group, id] = findgroups(sub_t.ZT);
     %go through each ZT
+    gids = unique(group);
     for j=1:numel(gids)
         sub_t1 = sub_t(group==gids(j),:);
         t_arr = cell2mat(sub_t1.traces);
+        states = unique(cell2mat(sub_t1.numbers),'rows');
+        sub_scores = cell2mat(sub_t1.scores);
+        if i<3
+            for mm = 1:size(sub_scores,1)
+                sub_scores(mm,sub_scores(mm,:)==4) = 1;
+            end
+        end
         
-        t_arr = smoothdata(t_arr,2,'gaussian',75);
-        clf
-        subplot(4,1,1:3)
-        [coeff,score,latent,tsquared,explained] = pca(t_arr);
-        [jnk srtinx] = sort(score(:,1),'descend');
-        imagesc(t_arr(srtinx,:))
-        tot_sec = size(t_arr,2)/fd;
-        xticks([0:fd*10:size(t_arr,2)])
-        labelarr = cellfun(@num2str,(num2cell((tot_sec/2)*-1:10:tot_sec/2)),'un',0);
-        xticklabels(labelarr)
-        ylabel('Transitions')
-        xlabel('Time (sec)')
-        title(strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT)),'interpreter','none')
-        caxis([-0.5 6])
-        subplot(414)
-        shadedErrorBar(1:size(t_arr,2),mean(t_arr),std(t_arr,0,1)/sqrt(size(t_arr,1)))
-        %make 10 second windows
-        xticks([0:fd*10:size(t_arr,2)])
-        xticklabels(labelarr)
-        xlabel('Time (sec)')
-        pname = fullfile(npath,strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT), {'.pdf'}));
-        exportgraphics(gcf,pname{1},'Resolution',300,'ContentType','vector');
-        
+        found = 1;
+        n=5;
+        while n<6
+            idx = kmeans(t_arr,n);
+            %check if clustering achieves 70% state requirement
+            gidx = unique(idx);
+            for ii=1:numel(gidx)
+                k_scores = sub_scores(idx==gidx(ii),:);
+                half_p = size(k_scores,2)/2;
+                before_percent = sum(k_scores(:,1:half_p)==states(1),2)*100/(states(1)*half_p);%%,1:half_p),2)*100/(half_p*states(1));
+                after_percent  = sum(k_scores(:,half_p:end)==states(2),2)*states(2)*100/(states(2)*half_p);
+                plot(mean(t_arr(idx==gidx(ii),:)))
+                title(['before: ' num2str(mean(before_percent)) ' after: ' num2str(mean(after_percent)) ' tot: ' num2str(100*sum(idx==gidx(ii))/numel(idx))]);
+                exportgraphics(gcf,fullfile(npath,['transitions cluster' num2str(gidx(ii)) '.pdf']),'Resolution',300,'ContentType','vector');
+                pause
+            end
+            n=n+1;
+        end
     end
 end
 
 
 
-desired_groups = [{'Quiet_Wake to Active_Wake'} {'Active_Wake to Quiet_Wake'}];
-fd =25;
-window = 50;
-%plot all the transitions 
-for i=1:numel(desired_groups)
-    sub_t = etransition_table(ismember(etransition_table.names,desired_groups{i}),:);
-    %split into ZTs
-    [group, id] = findgroups(sub_t.ZT);
-    %go through each ZT
-    for j=1:numel(gids)
-        sub_t1 = sub_t(group==gids(j),:);
-        t_arr = cell2mat(sub_t1.traces);
-        t_arr = smoothdata(t_arr,2,'gaussian',75);
-        clf
-        subplot(4,1,1:3)
-        [coeff,score,latent,tsquared,explained] = pca(t_arr);
-        [jnk srtinx] = sort(score(:,1),'descend');
-        imagesc(t_arr(srtinx,:))
-        tot_sec = size(t_arr,2)/fd;
-        xticks([0:fd*10:size(t_arr,2)])
-        labelarr = cellfun(@num2str,(num2cell((tot_sec/2)*-1:10:tot_sec/2)),'un',0);
-        xticklabels(labelarr)
-        ylabel('Transitions')
-        xlabel('Time (sec)')
-        title(strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT)),'interpreter','none')
-        caxis([0 5])
-        subplot(414)
-        shadedErrorBar(1:size(t_arr,2),mean(t_arr),std(t_arr,0,1)/sqrt(size(t_arr,1)))
-        %make 10 second windows
-        xticks([0:fd*10:size(t_arr,2)])
-        xticklabels(labelarr)
-        xlabel('Time (sec)')
-        pname = fullfile(npath,strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT), {'.pdf'}));
-        exportgraphics(gcf,pname{1},'Resolution',300,'ContentType','vector');
-        
-    end
-end
-% 
-% %testing the code
-% for i=1:numel(desired_groups)
-%     sub_t = etransition_table(ismember(etransition_table.names,desired_groups{i}),:);
-%     %split into ZTs
-%     [group, id] = findgroups(sub_t.ZT);
-%     %go through each ZT
-%     gids = unique(group);
-%     for j=1:numel(gids)
-%         sub_t1 = sub_t(group==gids(j),:);
-%         t_arr = cell2mat(sub_t1.traces);
-%         states = unique(cell2mat(sub_t1.numbers),'rows');
-%         sub_scores = cell2mat(sub_t1.scores);
-%         if i<3
-%             for mm = 1:size(sub_scores,1)
-%                 sub_scores(mm,sub_scores(mm,:)==4) = 1;
-%             end
-%         end
-%         
-%         found = 1;
-%         n=5;
-%         while n<6
-%             idx = kmeans(t_arr,n);
-%             %check if clustering achieves 70% state requirement
-%             gidx = unique(idx);
-%             for ii=1:numel(gidx)
-%                 k_scores = sub_scores(idx==gidx(ii),:);
-%                 half_p = size(k_scores,2)/2;
-%                 before_percent = sum(k_scores(:,1:half_p)==states(1),2)*100/(states(1)*half_p);%%,1:half_p),2)*100/(half_p*states(1));
-%                 after_percent  = sum(k_scores(:,half_p:end)==states(2),2)*states(2)*100/(states(2)*half_p);
-%                 plot(mean(t_arr(idx==gidx(ii),:)))
-%                 title(['before: ' num2str(mean(before_percent)) ' after: ' num2str(mean(after_percent)) ' tot: ' num2str(100*sum(idx==gidx(ii))/numel(idx))]);
-%                 exportgraphics(gcf,fullfile(npath,['transitions cluster' num2str(gidx(ii)) '.pdf']),'Resolution',300,'ContentType','vector');
-%                 pause
-%             end
-%             n=n+1;
-%         end
-%     end
-% end
+%% calculate binned transitions and re-plot it. 
 
 
-
-%% calculate binned transients and re-plot it.
 %load previously saved data and reprocess it
 bin_reanalyze =1;
 M=define_M();
 check = 1;
-bin_plot =1;
 for i=1:numel(mouse)
     for j=1:numel(mouse(i).session)
         drsfG_Path = dir(fullfile(mouse(i).session{j},'GCaMP_dsrfG*')); %paths to prev processed GCaMP data
@@ -466,9 +468,7 @@ for i=1:numel(mouse)
                 conv_zt = conv_zt(1:2);
                 drsfG = readtable(fullfile(drsfG_Path(ii).folder,drsfG_Path(ii).name));
                 path = mouse(i).session{j};
-                [allPeakIds] = calc_transients_v2(M,drsfG.dff,drsfG.Score,drsfG.Time,conv_zt,path);
-                if bin_plot
-                    [allPeakIds] = plot_windows(M,drsfG.dff,drsfG.Score,drsfG.Time,conv_zt,path);
+                [~] = calc_transients_v2(M,drsfG.dff,drsfG.Score,drsfG.Time,conv_zt,path);
             end
         else
             for ii=1:numel(transient_Paths)
@@ -478,7 +478,7 @@ for i=1:numel(mouse)
                     ind_transient.mouse = repmat(i,3,1);
                     ind_transient.session = repmat(j,3,1);
                     ind_transient.ZT = repmat({['ZT' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2))]},3,1);
-                    tot_transient = ind_transient;
+                    tot_transient = ind_transient; 
                     check=0;
                 else
                     ind_transient.mouse = repmat(i,3,1);

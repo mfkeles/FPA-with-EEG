@@ -23,10 +23,29 @@ for i=1:numel(k)
     headers{k{i}} = M(k{i});
     
 end
+
+
+%find max values for each state binned per hour
+k = keys(M);
+for i=1:numel(k)
+    for j=0:2
+        bin_len = floor(length(rsfG.dff)/3);
+        bin_rsfG = rsfG((bin_len*j)+1:bin_len*(j+1),:);
+        meanbinnedDFF(j+1,k{i}) = mean(bin_rsfG.dff(bin_rsfG.Scores == k{i}));
+        areabinned(j+1,k{i}) = (trapz(bin_rsfG.dff(bin_rsfG.Scores == k{i}))/fs);
+        headers{k{i}} = M(k{i});
+    end
+end
+
 meanDFF = array2table(meanDFF);
 meanDFF.Properties.VariableNames = headers;
 area = array2table(area);
 area.Properties.VariableNames = headers;
+
+meanbinnedDFF = array2table(meanbinnedDFF);
+meanbinnedDFF.Properties.VariableNames = headers;
+meanbinnedDFF.hours = [1:3]';
+
 
 
 %downsample the traces by a factor of ds
@@ -99,6 +118,7 @@ frequency = fs/ds;
 %save the processed files
 writetable(drsfG, fullfile(path,['GCaMP_dsrfG' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '-downsampled-to-' num2str(frequency) 'Hz-' 'processed.csv']));
 writetable(meanDFF, fullfile(path,['meanDFF-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
+writetable(meanbinnedDFF, fullfile(path,['meanbinnedDFF-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
 save(fullfile(path,['Transition-statistics-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.mat']),'m_traces','m_tidx','m_trans','m_name','no_transition','m_scores')
 writetable(area, fullfile(path,['area-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
 end

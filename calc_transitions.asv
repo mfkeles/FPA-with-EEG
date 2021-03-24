@@ -23,10 +23,29 @@ for i=1:numel(k)
     headers{k{i}} = M(k{i});
     
 end
+
+
+%find max values for each state binned per hour
+k = keys(M);
+for i=1:numel(k)
+    for j=0:2
+        bin_len = floor(length(rsfG.dff)/3);
+        bin_rsfG = rsfG((bin_len*j)+1:bin_len*(j+1),:);
+        meanbinnedDFF(j+1,k{i}) = mean(bin_rsfG.dff(bin_rsfG.Scores == k{i}));
+        areabinned(j+1,k{i}) = (trapz(bin_rsfG.dff(bin_rsfG.Scores == k{i}))/fs);
+        headers{k{i}} = M(k{i});
+    end
+end
+
 meanDFF = array2table(meanDFF);
 meanDFF.Properties.VariableNames = headers;
 area = array2table(area);
 area.Properties.VariableNames = headers;
+
+meanbinnedDFF = array2table(meanbinnnedDFF);
+meanbinnedDFF.Properties.VariableNames = headers;
+meanbinnedDFF.
+
 
 
 %downsample the traces by a factor of ds
@@ -43,7 +62,6 @@ v = unique(v(:,1:2),'rows');
 for i=1:size(v,1)
     all_combs{i} = [M(v(i,1)) ' to ' M(v(i,2))];
 end
-
 
 
 %find if there is unscored epochs and make them quietwake by defualt, this
@@ -84,7 +102,7 @@ for i=1:numel(t_idx)
         m_traces(n,:) = downsampled(t_idx(i)-window+1:(t_idx(i,:)+window));
         m_scores(n,:) = dscore(t_idx(i)-window+1:(t_idx(i,:)+window));
         m_tidx(n) = t_idx(i);
-        m_trans(n) = transition(i);
+        m_trans(n,:) = transition(i,:);
         m_name{n} = t_name{i};
         n=n+1;
     end
@@ -100,6 +118,6 @@ frequency = fs/ds;
 %save the processed files
 writetable(drsfG, fullfile(path,['GCaMP_dsrfG' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '-downsampled-to-' num2str(frequency) 'Hz-' 'processed.csv']));
 writetable(meanDFF, fullfile(path,['meanDFF-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
-save(fullfile(path,['Transition-statistics-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.mat']),'m_traces','m_tidx','m_trans','m_name','no_transition','m)
+save(fullfile(path,['Transition-statistics-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.mat']),'m_traces','m_tidx','m_trans','m_name','no_transition','m_scores')
 writetable(area, fullfile(path,['area-' 'ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.csv']));
 end

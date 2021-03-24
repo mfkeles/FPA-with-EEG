@@ -6,6 +6,7 @@ if exist(newFolder,'dir')
     path = newFolder;
 else
     mkdir(newFolder);
+    path = new
 end
 
 
@@ -92,13 +93,3 @@ for i=1:size(gidx,1)
     exportgraphics(gcf,fullfile(path,['EMG-Window-bin-' num2str(i) '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.pdf']),'Resolution',100,'ContentType','vector')
 end
 
-
-
-pspectrum(teeg,fs/10,'spectrogram','FrequencyLimits',[0 25],'Leakage',0.85,'OverlapPercent',60,'TimeResolution',30);
-
-
-pspectrum(eeg2_norm,fs,'spectrogram','FrequencyLimits',[0 25],'Leakage',0.85,'OverlapPercent',60,'TimeResolution',30);
-colormap('jet');
-ylim([0 25]);
-caxis([-25 0]);
-pbaspect([1 0.25 0.25]);

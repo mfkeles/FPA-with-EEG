@@ -6,6 +6,7 @@ if exist(newFolder,'dir')
     path = newFolder;
 else
     mkdir(newFolder);
+    path = newFolder;
 end
 
 
