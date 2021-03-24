@@ -1,4 +1,4 @@
-function plot_windows_combined(downsampled,dtime,dscore,depochs,sT,min_win,allPeakIds,conv_zt,path)
+function plot_windows(downsampled,dtime,dscore,depochs,sT,min_win,allPeakIds,conv_zt,path)
 
 newFolder= fullfile(path,'proc_bins');
 
@@ -6,7 +6,7 @@ if exist(newFolder,'dir')
     path = newFolder;
 else
     mkdir(newFolder);
-    path = new
+    path = newFolder;
 end
 
 
@@ -51,7 +51,7 @@ for i=1:size(gidx,1)
     surface([x;x], [y;y], [z;z], [lineColor;lineColor],...
         'FaceColor', 'no',...
         'EdgeColor', 'interp',...
-        'LineWidth', 1.5);
+        'LineWidth', 1);
     caxis([1 4])
     sec_idx =find(diff(floor(dtime(gidx(i,1):gidx(i,2))))==1);
     xticks([0 ; sec_idx(100:100:500) ; length(tmp_g)]);
@@ -63,10 +63,10 @@ for i=1:size(gidx,1)
     hold all
     tmp_mark = dumb_arr(gidx(i,1):gidx(i,2));
     mark_idx = find(tmp_mark);
-    plot(mark_idx,tmp_g(tmp_mark==1),'o','markerfacecolor',[0 0 0],'MarkerEdgeColor','None')
+    plot(mark_idx,tmp_g(tmp_mark==1),'o','MarkerEdgeColor',[0 0 0],'MarkerFaceColor','None')
     pbaspect([1 0.25 0.25]);
     
-    exportgraphics(gcf,fullfile(path,['Fiber-Window-bin-' num2str(i) '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.pdf']),'Resolution',100,'ContentType','vector')
+    %exportgraphics(gcf,fullfile(path,['Fiber-Window-bin-' num2str(i) '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.pdf']),'Resolution',100,'ContentType','vector')
     clf
     temg = downsample(sT.EMG(eidx(i,1):eidx(i,2)),10);
     tscores = downsample(sT.Scores(eidx(i,1):eidx(i,2)),10);
@@ -78,7 +78,7 @@ for i=1:size(gidx,1)
     surface([x;x], [y;y], [z;z], [lineColor;lineColor],...
         'FaceColor', 'no',...
         'EdgeColor', 'interp',...
-        'LineWidth', 1.5);
+        'LineWidth', 1);
     grid off;
     caxis([1 4])
     xlim([0 length(temg)]);
@@ -90,6 +90,6 @@ for i=1:size(gidx,1)
     ylabel('EMG (mV)');
     
     pbaspect([1 0.25 0.25]);
-    exportgraphics(gcf,fullfile(path,['EMG-Window-bin-' num2str(i) '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.pdf']),'Resolution',100,'ContentType','vector')
+    pause
+    %exportgraphics(gcf,fullfile(path,['EMG-Window-bin-' num2str(i) '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.pdf']),'Resolution',100,'ContentType','vector')
 end
-

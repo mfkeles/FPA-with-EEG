@@ -458,6 +458,7 @@ bin_plot =1;
 for i=1:numel(mouse)
     for j=1:numel(mouse(i).session)
         drsfG_Path = dir(fullfile(mouse(i).session{j},'GCaMP_dsrfG*')); %paths to prev processed GCaMP data
+        sT_Path = dir(fullfile(mouse(i).session{j},'EEG-EMG-ZT*'));
         transient_Paths = dir(fullfile(mouse(i).session{j},'all-transients-binned-*'));
         %load all the data
         if bin_reanalyze %transient recalculation if needed
@@ -465,10 +466,12 @@ for i=1:numel(mouse)
                 conv_zt = str2double(regexp(drsfG_Path(ii).name,'\d*','Match'));
                 conv_zt = conv_zt(1:2);
                 drsfG = readtable(fullfile(drsfG_Path(ii).folder,drsfG_Path(ii).name));
+                sT = readtable(fullfile(sT_Path(ii).folder,sT_Path(ii).name));
                 path = mouse(i).session{j};
                 [allPeakIds] = calc_transients_v2(M,drsfG.dff,drsfG.Score,drsfG.Time,conv_zt,path);
                 if bin_plot
                     [allPeakIds] = plot_windows(M,drsfG.dff,drsfG.Score,drsfG.Time,conv_zt,path);
+                end
             end
         else
             for ii=1:numel(transient_Paths)

@@ -6,7 +6,7 @@ parameters = {2.00, @std, @mean};
 fd = round(1/median(diff(dtime)));
 
 %peaksFilter = designfilt('lowpassiir','HalfPowerFrequency',0.2,'SampleRate',fd,'DesignMethod','butter','FilterOrder',12);
- [b a] = butter(2,0.5);
+ [b a] = butter(2,0.05);
  %peaksSmooth = filtfilt(b,a,downsampled);
 
 %divide it into three min bin
@@ -17,7 +17,6 @@ karr = M.keys;
 allPeakIds_binned=[];
 for ii=0:2
     bin_len = floor(length(downsampled)/3);
-   
     bin_downsampled = downsampled((bin_len*ii)+1:bin_len*(ii+1));
     bin_dscore = dscore((bin_len*ii)+1:bin_len*(ii+1));
     peaksSmooth = filtfilt(b,a,bin_downsampled);
