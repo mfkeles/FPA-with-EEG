@@ -10,18 +10,9 @@ else
 end
 
 
-
-%get indexes for bins by default EEG  is 400 Hz
-% fd = round(1/median(diff(dtime)));
-%
-% dffbinlen = 1:min_win*60*fd:numel(downsampled);
-% eegbinlen =1:400*60*min_win:numel(sT.Time);
 fs = 400; % for the EEG data
 [b a] = butter(2,0.05);
 downsampled = filtfilt(b,a,downsampled);
-%
-% peaksFilter = designfilt('lowpassiir','HalfPowerFrequency',0.2,'SampleRate',fd,'DesignMethod','butter','FilterOrder',12);
-% downsampled = filtfilt(peaksFilter,downsampled);
 
 %calculate it based on epochs, 60*min_win is the total number of seconds,
 %each epoch is 5 seconds
@@ -66,7 +57,7 @@ for i=1:size(gidx,1)
     plot(mark_idx,tmp_g(tmp_mark==1),'o','MarkerEdgeColor',[0 0 0],'MarkerFaceColor','None')
     pbaspect([1 0.25 0.25]);
     
-    %exportgraphics(gcf,fullfile(path,['Fiber-Window-bin-' num2str(i) '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.pdf']),'Resolution',100,'ContentType','vector')
+    exportgraphics(gcf,fullfile(path,['Fiber-Window-bin-' num2str(i) '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.pdf']),'Resolution',100,'ContentType','vector')
     clf
     temg = downsample(sT.EMG(eidx(i,1):eidx(i,2)),10);
     tscores = downsample(sT.Scores(eidx(i,1):eidx(i,2)),10);
@@ -91,5 +82,5 @@ for i=1:size(gidx,1)
     
     pbaspect([1 0.25 0.25]);
     pause
-    %exportgraphics(gcf,fullfile(path,['EMG-Window-bin-' num2str(i) '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.pdf']),'Resolution',100,'ContentType','vector')
+    exportgraphics(gcf,fullfile(path,['EMG-Window-bin-' num2str(i) '-ZT-' num2str(conv_zt(1)) '-to-' num2str(conv_zt(2)) '.pdf']),'Resolution',100,'ContentType','vector')
 end

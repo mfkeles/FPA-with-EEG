@@ -407,47 +407,6 @@ for i=1:numel(desired_groups)
         
     end
 end
-% 
-% %testing the code
-% for i=1:numel(desired_groups)
-%     sub_t = etransition_table(ismember(etransition_table.names,desired_groups{i}),:);
-%     %split into ZTs
-%     [group, id] = findgroups(sub_t.ZT);
-%     %go through each ZT
-%     gids = unique(group);
-%     for j=1:numel(gids)
-%         sub_t1 = sub_t(group==gids(j),:);
-%         t_arr = cell2mat(sub_t1.traces);
-%         states = unique(cell2mat(sub_t1.numbers),'rows');
-%         sub_scores = cell2mat(sub_t1.scores);
-%         if i<3
-%             for mm = 1:size(sub_scores,1)
-%                 sub_scores(mm,sub_scores(mm,:)==4) = 1;
-%             end
-%         end
-%         
-%         found = 1;
-%         n=5;
-%         while n<6
-%             idx = kmeans(t_arr,n);
-%             %check if clustering achieves 70% state requirement
-%             gidx = unique(idx);
-%             for ii=1:numel(gidx)
-%                 k_scores = sub_scores(idx==gidx(ii),:);
-%                 half_p = size(k_scores,2)/2;
-%                 before_percent = sum(k_scores(:,1:half_p)==states(1),2)*100/(states(1)*half_p);%%,1:half_p),2)*100/(half_p*states(1));
-%                 after_percent  = sum(k_scores(:,half_p:end)==states(2),2)*states(2)*100/(states(2)*half_p);
-%                 plot(mean(t_arr(idx==gidx(ii),:)))
-%                 title(['before: ' num2str(mean(before_percent)) ' after: ' num2str(mean(after_percent)) ' tot: ' num2str(100*sum(idx==gidx(ii))/numel(idx))]);
-%                 exportgraphics(gcf,fullfile(npath,['transitions cluster' num2str(gidx(ii)) '.pdf']),'Resolution',300,'ContentType','vector');
-%                 pause
-%             end
-%             n=n+1;
-%         end
-%     end
-% end
-
-
 
 %% calculate binned transients and re-plot it.
 %load previously saved data and reprocess it
