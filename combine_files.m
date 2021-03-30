@@ -6,6 +6,16 @@ cd(dirpath)
 
 %find all subdirectories
 animalFolders = find_folders(dirpath);
+remFolders=[];
+for i=1:length(animalFolders)
+    if ~contains(animalFolders(i).name,'mouse')
+        remFolders(end+1) = i;
+        
+    end
+end
+animalFolders(remFolders)=[];
+
+
 n=1;
 %within each mouse find the correct subdirectories
 for i=1:numel(animalFolders)
@@ -410,10 +420,10 @@ end
 
 %% calculate binned transients and re-plot it.
 %load previously saved data and reprocess it
-bin_reanalyze =1;
+bin_reanalyze =0;
 M=define_M();
 check = 1;
-bin_plot =1;
+bin_plot =0;
 for i=1:numel(mouse)
     for j=1:numel(mouse(i).session)
         drsfG_Path = dir(fullfile(mouse(i).session{j},'GCaMP_dsrfG*')); %paths to prev processed GCaMP data
@@ -425,11 +435,11 @@ for i=1:numel(mouse)
                 conv_zt = str2double(regexp(drsfG_Path(ii).name,'\d*','Match'));
                 conv_zt = conv_zt(1:2);
                 drsfG = readtable(fullfile(drsfG_Path(ii).folder,drsfG_Path(ii).name));
-                sT = readtable(fullfile(sT_Path(ii).folder,sT_Path(ii).name));
                 path = mouse(i).session{j};
                 [allPeakIds] = calc_transients_v2(M,drsfG.dff,drsfG.Score,drsfG.Time,conv_zt,path);
                 if bin_plot
-                    [allPeakIds] = plot_windows(M,drsfG.dff,drsfG.Score,drsfG.Time,conv_zt,path);
+                     sT = readtable(fullfile(sT_Path(ii).folder,sT_Path(ii).name));
+                    plot_windows(drsfG.dff,drsfG.Time,drsfG.Score,drsfG.Epochs,sT,min_win,allPeakIds,conv_zt,path);
                 end
             end
         else
@@ -464,7 +474,7 @@ for i=1:numel(gids)
         ntot_transient =[ntot_transient; tot_transient(group==gids(i),:)];
     end
     subplot(2,1,i)
-    ylim([0 0.2])
+    ylim([0 0.12])
     set(gca,'TickLabelInterpreter', 'none');
     notBoxPlot(table2array(tot_transient(group==gids(i),1:4)),'jitter',0.4);
     xticklabels(tot_transient.Properties.VariableNames(1:4));

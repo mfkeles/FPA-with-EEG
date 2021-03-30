@@ -26,7 +26,7 @@ for i=1:length(ep_idx)-1
     eidx(i,1) = find(sT.Epochs == ep_idx(i)+1,1);
 end
 
-dumb_arr = zeros(numel(downsampled,1));
+dumb_arr = zeros(numel(downsampled),1);
 dumb_arr(allPeakIds) = 1;
 
 for i=1:size(gidx,1)

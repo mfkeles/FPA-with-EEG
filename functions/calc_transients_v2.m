@@ -22,7 +22,7 @@ for ii=0:2
     peaksSmooth = filtfilt(b,a,bin_downsampled);
     peakThreshold = threshold(parameters,peaksSmooth);
     if any(peaksSmooth >= peakThreshold)
-    [~, allPeakIds] = findpeaks(+peaksSmooth, 'MinPeakHeight', peakThreshold);
+    [~, allPeakIds] = findpeaks(+peaksSmooth, 'MinPeakHeight', peakThreshold,'MinPeakProminence',0.5,'MinPeakWidth',5);
     end
    allPeakIds_binned = [allPeakIds_binned ; allPeakIds + (bin_len*ii)];
     for i=1:numel(karr)
