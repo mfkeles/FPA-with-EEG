@@ -347,6 +347,7 @@ for i=1:numel(desired_groups)
     sub_t = etransition_table(ismember(etransition_table.names,desired_groups{i}),:);
     %split into ZTs
     [group, id] = findgroups(sub_t.ZT);
+    gids = unique(group);
     %go through each ZT
     for j=1:numel(gids)
         sub_t1 = sub_t(group==gids(j),:);
@@ -358,13 +359,14 @@ for i=1:numel(desired_groups)
         [coeff,score,latent,tsquared,explained] = pca(t_arr);
         [jnk srtinx] = sort(score(:,1),'descend');
         imagesc(t_arr(srtinx,:))
+        colormap('hot')
         tot_sec = size(t_arr,2)/fd;
         xticks([0:fd*10:size(t_arr,2)])
         labelarr = cellfun(@num2str,(num2cell((tot_sec/2)*-1:10:tot_sec/2)),'un',0);
         xticklabels(labelarr)
         ylabel('Transitions')
         xlabel('Time (sec)')
-        title(strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT)),'interpreter','none')
+        title(strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT),{' tot_rows'},{num2str(size(t_arr,1))}),'interpreter','none')
         caxis([-0.5 6])
         subplot(414)
         shadedErrorBar(1:size(t_arr,2),mean(t_arr),std(t_arr,0,1)/sqrt(size(t_arr,1)))
@@ -383,16 +385,33 @@ end
 desired_groups = [{'Quiet_Wake to Active_Wake'} {'Active_Wake to Quiet_Wake'}];
 fd =25;
 window = 50;
+subsetting=1;
+time_to_subset =15;
+plot_wind = 30;
 %plot all the transitions 
 for i=1:numel(desired_groups)
-    sub_t = etransition_table(ismember(etransition_table.names,desired_groups{i}),:);
+    sub_t = ntransition_table(ismember(ntransition_table.names,desired_groups{i}),:);
     %split into ZTs
     [group, id] = findgroups(sub_t.ZT);
+    gids = unique(group);
     %go through each ZT
     for j=1:numel(gids)
         sub_t1 = sub_t(group==gids(j),:);
         t_arr = cell2mat(sub_t1.traces);
         t_arr = smoothdata(t_arr,2,'gaussian',75);
+        
+        %only pick a subset
+        if subsetting
+            s_arr = cell2mat(sub_t1.scores)';
+            mid_point = window*fd;
+            pre_idx = find(sum(diff(s_arr((mid_point-(time_to_subset*fd)+6):mid_point,:)),1)==0);
+            post_idx = find(sum(diff(s_arr(mid_point+1:(mid_point+(time_to_subset*fd)-5),:)),1)==0);
+            fin_idx = intersect(pre_idx,post_idx); 
+              t_arr = t_arr(fin_idx,:);
+        else
+            time_to_subset = 0;
+        end
+        
         clf
         subplot(4,1,1:3)
         [coeff,score,latent,tsquared,explained] = pca(t_arr);
@@ -400,19 +419,25 @@ for i=1:numel(desired_groups)
         imagesc(t_arr(srtinx,:))
         tot_sec = size(t_arr,2)/fd;
         xticks([0:fd*10:size(t_arr,2)])
+         colormap('hot')
         labelarr = cellfun(@num2str,(num2cell((tot_sec/2)*-1:10:tot_sec/2)),'un',0);
         xticklabels(labelarr)
         ylabel('Transitions')
         xlabel('Time (sec)')
-        title(strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT)),'interpreter','none')
+        title(strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT),{' subset by '},{num2str(time_to_subset)},{'sec'},{' tot_rows'},{num2str(size(t_arr,1))}),'interpreter','none')
         caxis([0 5])
+         xlim([(mid_point-(plot_wind*fd)),(mid_point+(plot_wind*fd))])
+        box off
         subplot(414)
         shadedErrorBar(1:size(t_arr,2),mean(t_arr),std(t_arr,0,1)/sqrt(size(t_arr,1)))
         %make 10 second windows
         xticks([0:fd*10:size(t_arr,2)])
         xticklabels(labelarr)
         xlabel('Time (sec)')
-        pname = fullfile(npath,strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT), {'.pdf'}));
+        ylim([0 0.9])
+        xlim([(mid_point-(plot_wind*fd)),(mid_point+(plot_wind*fd))])
+        box off
+        pname = fullfile(npath,strcat(unique(sub_t1.names),{' '},unique(sub_t1.ZT),{' subset by '},{num2str(time_to_subset)},{'sec '},{num2str(plot_wind)},{'wind'},{'.pdf'}));
         exportgraphics(gcf,pname{1},'Resolution',300,'ContentType','vector');
         
     end
