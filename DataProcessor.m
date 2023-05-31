@@ -7,6 +7,7 @@ classdef DataProcessor < DataLoader
         proc_trial_data
         MinPeakDistance = 0.2
         MinPeakProminence = 0.1
+        cutOffFrequency = 5
         peak_data
     end
     methods
@@ -122,6 +123,10 @@ classdef DataProcessor < DataLoader
                 rCorrected = ref_raw - rBleaching;
                 sCorrected = g_raw - sBleaching;
                 trace = sCorrected - rCorrected;
+                
+                fFilter = designfilt('lowpassiir', 'HalfPowerFrequency', obj.cutOffFrequency, 'SampleRate', fs, 'DesignMethod', 'butter', 'FilterOrder', 12);
+                trace = filtfilt(fFilter,trace);
+
             end
 
             function normalized_trace = normalize_trace(f, time, normalizationOption)
@@ -325,7 +330,7 @@ classdef DataProcessor < DataLoader
                 obj.score_summary.(sprintf('score_%d', current_score)) = time_spent;
             end
         end
-        function result = calculatePeaks(obj)
+        function [result locs] = calculatePeaks(obj)
             % Initialize the result table
             result = table();
 
@@ -334,7 +339,7 @@ classdef DataProcessor < DataLoader
                 current_table = obj.proc_trial_data{i};
 
                 % Find peaks in the NormalizedTrace_2 data
-                [pks,locs,w,p] = findpeaks(current_table.NormalizedTrace_2, 'MinPeakDistance', obj.fiber_fs * obj.MinPeakDistance, 'MinPeakProminence', obj.MinPeakProminence);
+                [pks,locs,w,p] = findpeaks(current_table.NormalizedTrace_2, 'MinPeakDistance', obj.fiber_fs * obj.MinPeakDistance, 'MinPeakProminence', obj.MinPeakProminence,'WidthReference','halfheight');
 
                 % Initialize arrays to store results for each score
                 peak_counts = zeros(1,4);
@@ -355,7 +360,7 @@ classdef DataProcessor < DataLoader
 
                         % Calculate average peak value, width and prominence
                         peak_avgs(score_idx) = mean(pks(score_peaks));
-                        width_avgs(score_idx) = mean(w(score_peaks));
+                        width_avgs(score_idx) = mean(w(score_peaks))/obj.fiber_fs;
                         prom_avgs(score_idx) = mean(p(score_peaks));
                     else
                         peak_counts(score_idx) = NaN;
