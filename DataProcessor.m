@@ -123,7 +123,7 @@ classdef DataProcessor < DataLoader
                 rCorrected = ref_raw - rBleaching;
                 sCorrected = g_raw - sBleaching;
                 trace = sCorrected - rCorrected;
-                
+
                 fFilter = designfilt('lowpassiir', 'HalfPowerFrequency', obj.cutOffFrequency, 'SampleRate', fs, 'DesignMethod', 'butter', 'FilterOrder', 12);
                 trace = filtfilt(fFilter,trace);
 
@@ -421,7 +421,37 @@ classdef DataProcessor < DataLoader
                     end
                 end
             end
-        end    
+        end
+    end
+    methods (Static)
+        function saveCombinedTransientStatistics(combined_transients,parent_folder)
+            % Define the metrics and scores
+            metrics = {'peak_count', 'peak_avg', 'width_avg', 'prom_avg'};
+            score_labels = {'wake', 'NREM', 'REM', 'Awake'};
+
+            % Loop through each metric
+            for i = 1:length(metrics)
+                metric = metrics{i};
+
+                % Select the columns corresponding to the current metric
+                metric_cols = contains(combined_transients.Properties.VariableNames, [metric '_']);
+                % Convert the logical index to a numeric index
+                metric_cols_idx = find(metric_cols);
+
+                % Combine the numeric index with the positional index
+                metric_table = combined_transients(:, [metric_cols_idx, (width(combined_transients)-2):width(combined_transients)]);
+
+
+                % Replace the score names in the column names
+                metric_table.Properties.VariableNames = strrep(metric_table.Properties.VariableNames, 'score_', '');
+                for j = 1:4
+                    metric_table.Properties.VariableNames = strrep(metric_table.Properties.VariableNames, num2str(j), score_labels{j});
+                end
+
+                % Save the table to a CSV file
+                writetable(metric_table, fullfile(parent_folder,[metric '_transients.csv']));
+            end
+        end
     end
 end
 

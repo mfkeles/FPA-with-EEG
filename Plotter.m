@@ -242,9 +242,6 @@ classdef Plotter < handle
                 fiber_duration = height(fiber_table) / (60 * fiber_sampling_frequency);  % duration in minutes for fiber data
                 eeg_duration = height(eeg_table) / (60 * eeg_sampling_frequency);  % duration in minutes for eeg data
 
-                % Create a new figure for each cell
-                %fig = figure('PaperSize',[8.3, 14.7]); % A4 paper size
-
                 % Loop over each bin
                 for j = 1:2  % Adjust the loop to iterate over 2 chunks
                     % Calculate start and end indices for the current bin
@@ -258,27 +255,39 @@ classdef Plotter < handle
                     eeg_bin = eeg_table(eeg_start_index:eeg_end_index, :);
 
                     % Find peaks for fiber_bin
-                    dec_fiber_bin = decimate(fiber_bin.NormalizedTrace_2, decimation_factor);
-                    dec_scores = decimate(fiber_bin.Scores, decimation_factor);
+                    dec_fiber_bin = downsample(fiber_bin.NormalizedTrace_2, decimation_factor);
+                    dec_scores = downsample(fiber_bin.Scores, decimation_factor);
 
-                    dec_EMG = decimate(eeg_bin.EMGEMG, decimation_factor);
-                    dec_EMG_scores = decimate(eeg_bin.ExpandedScore, decimation_factor);
+                    dec_EMG = downsample(eeg_bin.EMGEMG, decimation_factor);
+                    dec_EMG_scores = downsample(eeg_bin.ExpandedScore, decimation_factor);
 
-                    [pks,locs] = findpeaks(dec_fiber_bin- (min(dec_fiber_bin)), 'MinPeakDistance', fiber_sampling_frequency/decimation_factor * MinPeakDistance, 'MinPeakProminence', MinPeakProminence,'WidthReference','halfheight','MinPeakHeight',MinPeakHeight);
+                    [pks,locs] = findpeaks(dec_fiber_bin- (min(dec_fiber_bin)), 'MinPeakDistance', fiber_sampling_frequency * MinPeakDistance, 'MinPeakProminence', MinPeakProminence,'WidthReference','halfheight','MinPeakHeight',MinPeakHeight);
+
+
                     % Create subplots
                     subplot(6, 1, j*3-2) % first row for fiber data
-                    patch([1:length(dec_fiber_bin), nan], [dec_fiber_bin', nan], ...
-                        [dec_scores', nan], 'EdgeColor', 'interp','FaceColor','none','LineWidth',1);
+                    hold on;
+                    %                     for idx = 1:length(dec_fiber_bin)-1
+                    %                         line([idx idx+1], [dec_fiber_bin(idx), dec_fiber_bin(idx+1)], 'Color', obj.cmap(dec_scores(idx), :), 'LineWidth', 1);
+                    %                     end
+                    % Then plot the peaks using 'v' as the marker (an upside down triangle)
+                    plot(locs, dec_fiber_bin(locs), 'o','Color','r','MarkerSize',2);
+
+                    x = [1:length(dec_fiber_bin); 1:length(dec_fiber_bin)];
+                    y = [dec_fiber_bin'; dec_fiber_bin'];
+                    z = zeros(size(x)); % we don't need a third dimension for a 2D plot
+                    lineColor = [dec_scores'; dec_scores'];
+
+                    surface(x, y, z, lineColor, 'FaceColor', 'no', 'EdgeColor', 'interp', 'LineWidth', 1);
 
                     colormap(gca, obj.cmap);  % Use the colormap defined in Plotter class for fiber data
                     caxis(gca, [1 4]);  % Set color axis limits to match score values
-                    hold on;
-
-                    % Then plot the peaks using 'v' as the marker (an upside down triangle)
-                    plot(locs, dec_fiber_bin(locs), 'o','Color','r','MarkerSize',3);
                     hold off;
+                    pbaspect([1 0.25 0.25]);  %aspect ratio, looks decent as of now?
+                    box off
+
                     title(['Fiber Data Chunk ' num2str(j)]);
-                    xticks(0:fiber_sampling_frequency/decimation_factor*60:length(dec_fiber_bin));
+                    xticks(0:fiber_sampling_frequency*60/decimation_factor:length(dec_fiber_bin));
                     xticklabels(0:length(dec_fiber_bin)/fiber_sampling_frequency/decimation_factor);
                     xlim([0,length(dec_fiber_bin)])
                     xlabel('Time (min)');
@@ -287,24 +296,37 @@ classdef Plotter < handle
                     subplot(6, 1, j*3-1); % second row for EEG data
                     pspectrum(eeg_bin.EEGEEG2A_B,fs_eeg,'spectrogram','FrequencyLimits',[0 25],'Leakage',0.85,'OverlapPercent',60,'TimeResolution',10);
                     % After your call to pspectrum
-                    colorbarHandles = findobj(gcf,'type','colorbar');
-                    delete(colorbarHandles);
-                    colormap(gca, 'default');  % Use the default colormap for EEG data
+                    %colorbarHandles = findobj(gcf,'type','colorbar');
+                    %delete(colorbarHandles);
+                    colormap(gca, 'jet');  % Use the default colormap for EEG data
                     title(['EEG Data Chunk ' num2str(j)]);
                     %xlim([0,length(eeg_bin.EEGEEG2A_B)])
                     xlabel('Time (min)');
                     ylabel('EEG Data');
+                    box off
+                    pbaspect([1 0.25 0.25]);  %aspect ratio, looks decent as of now?
 
                     subplot(6, 1, j*3) % third row for EMG data
-                    patch([1:length(eeg_bin.EMGEMG), nan], [eeg_bin.EMGEMG', nan], ...
-                        [eeg_bin.ExpandedScore', nan], 'EdgeColor', 'interp','FaceColor','none','LineWidth',1);
+                    %                     hold on;
+                    %                     for idx = 1:length(dec_EMG)-1
+                    %                         line([idx idx+1], [dec_EMG(idx), dec_EMG(idx+1)], 'Color', obj.cmap(dec_EMG_scores(idx), :), 'LineWidth', 1);
+                    %                     end
+                    %                     hold off;
+                    x = [1:length(dec_EMG); 1:length(dec_EMG)];
+                    y = [dec_EMG'; dec_EMG'];
+                    z = zeros(size(x)); % we don't need a third dimension for a 2D plot
+                    lineColor = [dec_EMG_scores'; dec_EMG_scores'];
+
+                    surface(x, y, z, lineColor, 'FaceColor', 'no', 'EdgeColor', 'interp', 'LineWidth', 1);
 
                     colormap(gca, obj.cmap);  % Use the colormap defined in Plotter class for EMG data
                     caxis(gca, [1 4]);  % Set color axis limits to match score values
-                    xticks(0:fs_eeg*60:length(eeg_bin.EMGEMG));
-                    xticklabels(0:length(eeg_bin.EMGEMG)/fs_eeg);
-                    xlim([0,length(eeg_bin.EMGEMG)])
-                    ylim([-500,500])
+                    xticks(0:fs_eeg*60/decimation_factor:length(dec_EMG));
+                    xticklabels(0:length(dec_EMG)/fs_eeg/decimation_factor);
+                    pbaspect([1 0.25 0.25]);  %aspect ratio, looks decent as of now?
+                    box off
+                    xlim([0,length(dec_EMG)])
+                    ylim([-100,100])
                     title(['EMG Data Chunk ' num2str(j)]);
                     xlabel('Time (min)');
                     ylabel('EMG Data');
@@ -314,14 +336,10 @@ classdef Plotter < handle
                 if ~exist(fullfile(parent_folder, 'figs'), 'dir')
                     mkdir(fullfile(parent_folder, 'figs'));
                 end
-                %plot2svg(fullfile(parent_folder, 'figs', strcat('fiber_chunks_combined_eeg_trial_pn_',num2str(i),'_patch.svg')))
-                exportgraphics(gcf, fullfile(parent_folder, 'figs', strcat('fiber_chunks_combined_eeg_trial_pn_',num2str(i),'_patch_cbar.pdf')),'ContentType','vector','Resolution',150);
-                %close(fig);
+                exportgraphics(gcf, fullfile(parent_folder, 'figs', strcat('fiber_chunks_combined_eeg_trial_pn_',num2str(i),'_',num2str(decimation_factor),'_jet_adjust_100.pdf')),'ContentType','vector','Resolution',150);
                 clf
             end
         end
-
-
 
     end
     methods (Static)
@@ -369,7 +387,6 @@ classdef Plotter < handle
                 % Plot heatmap
                 imagesc(transition_matrix);
 
-                colorbar;
 
                 % Create title string with state names
                 transition_numbers = strsplit(char(transition_type), ' to ');
@@ -441,15 +458,220 @@ classdef Plotter < handle
                 xlim([0,size(transition_matrix,2)]);
                 xticks(0:fs_fiber*5:size(transition_matrix,2));
                 xticklabels(-10:5:10);
-
-
-                exportgraphics(gcf,fullfile(parent_folder,strcat(strjoin(transition_states, ' to '),'colorbar.pdf')),'Resolution',300,'ContentType','vector');
+                exportgraphics(gcf,fullfile(parent_folder,strcat(strjoin(transition_states, ' to '),'.pdf')),'Resolution',300,'ContentType','vector');
 
 
             end
         end
 
+        function plotSummaryStatistics(combined_transients,parent_folder)
 
+            % Define the base names of the metrics
+            base_metric_names = {'peak_count', 'peak_avg', 'width_avg', 'prom_avg'};
+
+            % Extract the unique mice IDs
+            unique_mice = unique(combined_transients.mouse);
+
+            % Define the colormap and score labels
+            cmap = [102 194 165; 252 141 98; 141 160 203; 231 138 195] / 255;
+            score_labels = {'Wake', 'NREM', 'REM', 'Awake'};
+
+            % Loop through each base metric name
+            for metric_idx = 1:length(base_metric_names)
+                % Initialize a figure for the current metric
+                fig = figure;
+                hold on;
+
+                % Extract the current base metric name
+                base_metric_name = base_metric_names{metric_idx};
+
+                % Loop through each unique mouse ID
+                for mouse_idx = 1:length(unique_mice)
+                    % Extract the current mouse ID
+                    mouse_id = unique_mice(mouse_idx);
+
+                    % Loop through each score
+                    for score_idx = 1:4
+                        % Define the full metric name for the current score
+                        full_metric_name = [base_metric_name, '_score_', num2str(score_idx)];
+
+                        % Extract the rows for the current mouse
+                        mouse_rows = combined_transients.mouse == mouse_id;
+
+                        % Calculate the average value for the current mouse and score
+                        avg_value = nanmean(combined_transients{mouse_rows, full_metric_name});
+
+                        % Plot the average value
+                        bar((mouse_idx-1)*5 + score_idx, avg_value, 'FaceColor', cmap(score_idx, :));
+                    end
+                end
+
+                % Set x-axis ticks and labels
+                xticks(1:5:length(unique_mice)*5);
+                xticklabels(arrayfun(@(x) sprintf('Mouse %d', x), unique_mice, 'UniformOutput', false));
+                xtickangle(45);
+
+                % Set y-axis label
+                ylabel(base_metric_name);
+
+                % Set title
+                title([base_metric_name, ' per Mouse'], 'Interpreter', 'none');
+
+                % Add legend
+                legend(score_labels, 'Location', 'northoutside', 'NumColumns', 4);
+
+                % Save the figure
+                saveas(fig, fullfile(parent_folder, [base_metric_name, '_per_mouse.png']));
+                close(fig);
+            end
+
+        end
+        function plotSummaryStatisticsZT(combined_transients,parent_folder)
+
+            % Define the base names of the metrics
+            base_metric_names = {'peak_count', 'peak_avg', 'width_avg', 'prom_avg'};
+
+            % Extract the unique mice IDs
+            unique_mice = unique(combined_transients.mouse);
+
+            % Define the colormap and score labels
+            cmap = [102 194 165; 252 141 98; 141 160 203; 231 138 195] / 255;
+            score_labels = {'Wake', 'NREM', 'REM', 'Awake'};
+
+            % Define the ZT values
+            zt_values = {'3', '15'};
+
+            % Loop through each base metric name
+            for metric_idx = 1:length(base_metric_names)
+                % Initialize a figure for the current metric
+                fig = figure;
+                hold on;
+
+                % Extract the current base metric name
+                base_metric_name = base_metric_names{metric_idx};
+
+                % Loop through each unique mouse ID
+                for mouse_idx = 1:length(unique_mice)
+                    % Extract the current mouse ID
+                    mouse_id = unique_mice(mouse_idx);
+
+                    % Loop through each score
+                    for score_idx = 1:4
+                        % Define the full metric name for the current score
+                        full_metric_name = [base_metric_name, '_score_', num2str(score_idx)];
+
+                        % Loop through each ZT value
+                        for zt_idx = 1:length(zt_values)
+                            % Define the current ZT value
+                            zt_value = zt_values{zt_idx};
+
+                            % Extract the rows for the current mouse and ZT value
+                            mouse_zt_rows = combined_transients.mouse == mouse_id & ...
+                                (strcmp(combined_transients.ZT, zt_value) | (strcmp(zt_value, '15') & strcmp(combined_transients.ZT, '14')));
+
+                            % Calculate the average value for the current mouse, ZT value, and score
+                            avg_value = nanmean(combined_transients{mouse_zt_rows, full_metric_name});
+
+                            % Plot the average value
+                            bar((mouse_idx-1)*10 + (zt_idx-1)*5 + score_idx, avg_value, 'FaceColor', cmap(score_idx, :));
+                        end
+                    end
+                end
+
+                % Set x-axis ticks and labels
+                xticks(1:5:length(unique_mice)*10);
+                xticklabels(repmat(arrayfun(@(x) sprintf('Mouse %d', x), unique_mice, 'UniformOutput', false), 1, 2));
+                xtickangle(45);
+
+                % Set y-axis label
+                ylabel(base_metric_name);
+
+                % Set title
+                title([base_metric_name, ' per Mouse (ZT3 vs ZT15)'], 'Interpreter', 'none');
+
+                % Add legend
+                legend([strcat(score_labels, ' - ZT3'), strcat(score_labels, ' - ZT15')], 'Location', 'northoutside', 'NumColumns', 4);
+
+                % Save the figure
+                saveas(fig, fullfile(parent_folder, [base_metric_name, '_per_mouse_ZT3_vs_ZT15.png']));
+                close(fig);
+            end
+        end
+
+        function plotSummaryStatisticsScatterComparison(combined_transients,folder_path)
+            parent_folder = folder_path;
+            unique_mice = unique(combined_transients.mouse);
+            unique_zts = {'3', '15'};
+            metrics = {'peak_count', 'peak_avg', 'width_avg', 'prom_avg'};
+            score_labels = {'Wake', 'NREM', 'REM', 'Awake'};
+            markers = 'o+';
+            cmap = [102 194 165; 252 141 98; 141 160 203; 231 138 195] / 255;
+
+            for metric_idx = 1:length(metrics)
+                metric = metrics{metric_idx};
+                fig = figure;
+
+                % Create dummy plots for the legend
+                for score_idx = 1:4
+                    for zt_idx = 1:length(unique_zts)
+                        scatter(nan, nan, 50, markers(zt_idx), 'MarkerEdgeColor', cmap(score_idx, :), 'LineWidth', 1.5, 'DisplayName', [score_labels{score_idx} ' (ZT' unique_zts{zt_idx} ')']);
+                        hold on;
+                    end
+                end
+
+                % Create the legend and set 'AutoUpdate' to 'off'
+                legend('Location', 'bestoutside', 'AutoUpdate', 'off');
+
+                % Loop over each mouse
+                for mouse_idx = 1:length(unique_mice)
+                    mouse_id = unique_mice(mouse_idx);
+
+                    % Plot ZT3 and ZT15 values for each score
+                    for score_idx = 1:4
+                        y = zeros(1,2);
+
+                        % Loop over each ZT value
+                        for zt_idx = 1:length(unique_zts)
+                            zt_value = unique_zts{zt_idx};
+
+                            % Extract the rows for the current mouse and ZT value
+                            mouse_zt_rows = combined_transients.mouse == mouse_id & ...
+                                (strcmp(combined_transients.ZT, zt_value) | (strcmp(zt_value, '15') & strcmp(combined_transients.ZT, '14')));
+
+                            % Get the metric value for the current mouse, score and ZT value
+                            y(zt_idx) = nanmean(combined_transients{mouse_zt_rows, [metric '_score_' num2str(score_idx)]});
+                        end
+
+                        % Adjust x for each score type to avoid overlap
+                        x = (mouse_idx-1)*5 + score_idx;
+
+                        % Plot ZT3 and ZT15 values
+                        for zt_idx = 1:length(unique_zts)
+                            scatter(x, y(zt_idx), 50, markers(zt_idx), 'MarkerEdgeColor', cmap(score_idx, :), 'LineWidth', 1.5);
+                            hold on;
+                        end
+
+                        % Plot a line connecting the ZT3 and ZT15 values
+                        plot(x*ones(size(y)), y, 'Color', cmap(score_idx, :), 'LineWidth', 1.5);
+                    end
+                end
+
+                % Adjust x-axis
+                xticks(1:5:length(unique_mice)*5);
+                xticklabels(arrayfun(@(x) sprintf('Mouse %d', x), unique_mice, 'UniformOutput', false));
+
+                % Set y-axis label
+                ylabel([metric ' per score']);
+                % Set title
+                title([metric ' per mouse per score'], 'Interpreter', 'none');
+
+                % Save the figure
+                saveas(fig, fullfile(parent_folder, [metric '_per_mouse_per_score_ZT.png']));
+                close(fig);
+            end
+        end
     end
+
+
 
 end
