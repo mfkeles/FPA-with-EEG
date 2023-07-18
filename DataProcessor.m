@@ -176,14 +176,14 @@ classdef DataProcessor < DataLoader
                     else
                         % Produce a value from all data (or epochs).
                         epochs = parameters{2};
-                        ids = time2id(time, epochs);
+                        ids = DataProcessor.time2id(time, epochs);
                         output = fcn(f(ids));
                     end
                 elseif isa(parameters, 'function_handle')
                     % Produce a value from all data (or epochs).
                     fcn = parameters;
                     epochs = [-Inf, Inf];
-                    ids = time2id(time, epochs);
+                    ids = DataProcessor.time2id(time, epochs);
                     output = fcn(f(ids));
                 else
                     output = parameters;
@@ -422,7 +422,9 @@ classdef DataProcessor < DataLoader
                 end
             end
         end
+
     end
+
     methods (Static)
         function saveCombinedTransientStatistics(combined_transients,parent_folder)
             % Define the metrics and scores
@@ -451,6 +453,24 @@ classdef DataProcessor < DataLoader
                 % Save the table to a CSV file
                 writetable(metric_table, fullfile(parent_folder,[metric '_transients.csv']));
             end
+        end
+                function [ids, limits] = time2id(time, epochs)
+            epochs = epochs(:);
+            % timeLimits = zeros(2, nEpochs);
+            a = arrayfun(@(t) find(time >= t, 1, 'first'), epochs(1:2:end), 'UniformOutput', false);
+            b = arrayfun(@(t) find(time <= t, 1, 'last'), epochs(2:2:end), 'UniformOutput', false);
+            k = cellfun(@isempty, a) | cellfun(@isempty, b);
+            a(k) = [];
+            b(k) = [];
+            nEpochs = numel(a);
+            limits = zeros(2, nEpochs);
+            limits(1:2:end) = [a{:}];
+            limits(2:2:end) = [b{:}];
+            % When "last" can't find anything ahead of "first", force a single time point.
+            k = diff(limits, [], 1) < 0;
+            limits(2, k) = limits(1, k);
+            ids = arrayfun(@(e) colon(limits(1, e), limits(2, e))', 1:nEpochs, 'UniformOutput', false);
+            ids = cat(1, ids{:});
         end
     end
 end
