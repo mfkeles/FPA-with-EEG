@@ -16,13 +16,34 @@ If the user has chosen to plot, the `Plotter` class is used to generate plots of
 
 Finally, the script saves the combined data, combined transients, and combined transitions as .csv files, and generates additional plots if the user has chosen to do so.
 
+## Input Data Structure
+
+The input data should be structured as follows:
+
+```
+.
+├── Input Folder
+    ├── Animal 1
+        ├── mmddyy-ZT1-2
+        ├── mmddyy-ZT2-3
+        ├── ...
+    ├── Animal 2
+        ├── mmddyy-ZT1-2
+        ├── mmddyy-ZT2-3
+        ├── ...
+    ├── Animal 3
+        ├── mmddyy-ZT1-2
+        ├── mmddyy-ZT2-3
+        ├── ...
+```
+The root directory contains the input folder. Inside this folder, there are individual folders for each animal, named as "Animal 1", "Animal 2", etc. Within each of these animal folders, there are individual trials named in the format "mmddyy-ZTX-Y", where X and Y represent the ZT start and end time respectively.
 ## How to Use
 
 To use the script, simply run it in MATLAB. When prompted, input 'yes' or 'no' to choose whether to generate plots during execution. The script will take care of the rest.
 
 Please ensure that you have the necessary data files and folders as described in the script comments.
 
-**Note:** This script requires MATLAB and uses features that may require specific MATLAB toolboxes.
+**Note:** This script requires MATLAB and Signal Processing Toolbox
 
 ## Contribution
 
@@ -32,3 +53,7 @@ Feel free to fork this repository and improve. Here are some improvements that y
 - Modify the plotting code to create different plots
 
 Pull requests are welcome.
+
+## Acknowledgments
+
+The methods used for Z-score calculation in this script are adopted from : [FPA by leomol](https://github.com/leomol/FPA). 
