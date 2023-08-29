@@ -57,3 +57,5 @@ Pull requests are welcome.
 ## Acknowledgments
 
 The methods used for Z-score calculation in this script are adopted from : [FPA by leomol](https://github.com/leomol/FPA). 
+
+[![DOI](https://zenodo.org/badge/344958087.svg)](https://zenodo.org/badge/latestdoi/344958087)
